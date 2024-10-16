@@ -1,0 +1,19 @@
+[project]
+name = "lazy-import"
+version = "0.1.0"
+description = "python with no imports"
+authors = [
+    {name = "sneakers-the-rat", email = "sneakers-the-rat@protonmail.com"},
+]
+dependencies = []
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "EUPL-1.2"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true

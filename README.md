@@ -1,5 +1,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/no-more-imports)
 
+([source repository](https://git.jon-e.net/jonny/no-more-imports), [github read-only mirror](https://github.com/sneakers-the-rat/no-more-imports))
+
 # no-more-imports
 
 python with no imports

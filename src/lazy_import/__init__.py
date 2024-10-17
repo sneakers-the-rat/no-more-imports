@@ -1,4 +1,2 @@
-import sys
-
-def getattr(name):
-    pass
+from lazy_import.importer import install
+install()

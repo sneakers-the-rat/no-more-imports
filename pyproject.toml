@@ -10,6 +10,11 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "EUPL-1.2"}
 
+[project.optional-dependencies]
+tests = [
+    "pytest>=8.3.3",
+    "numpy>=2.1.2",
+]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"

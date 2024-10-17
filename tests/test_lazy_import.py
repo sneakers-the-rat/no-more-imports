@@ -2,7 +2,7 @@ import lazy_import
 from typing import List
 import collections.abc
 from collections.abc import Callable
-from collections.abc import ChainMap as cm
+from collections import ChainMap as cm
 
 mod_variable = 10
 
@@ -26,8 +26,7 @@ def test_names_are_lazy():
     """
     you can just use the last unique segment
     """
-    _ = numpy.random.random(100)
-    _ = random
+    _ = random.randint(1, 10)
+    _ = randint(1, 10)
 
-    assert random is numpy.random.random
-
+    assert randint is random.randint

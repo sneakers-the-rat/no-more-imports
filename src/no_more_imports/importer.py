@@ -142,10 +142,12 @@ def _do_install(packages: list[str], quiet: bool = False):
         res = subprocess.run(['python', '-m', 'pip', 'install', package], capture_output=True)
         if res.returncode != 0:
             errors.append({'package': package, 'stdout': res.stdout, 'stderr': res.stderr})
-    if len(errors) == 0:
-        print("sweet jesus we did it")
-    else:
-        print(f"some problems here pal:\n{pformat(errors, indent=2, compact=True)}")
+
+    if not quiet:
+        if len(errors) == 0:
+            print("sweet jesus we did it")
+        else:
+            print(f"some problems here pal:\n{pformat(errors, indent=2, compact=True)}")
 
 
 def install():

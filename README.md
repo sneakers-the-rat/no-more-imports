@@ -71,6 +71,12 @@ pip install no-more-imports
 
 Do not use this package
 
+### Configuration
+
+env vars:
+
+- `NMI_QUIET=true` - don't print anything to stdout like when installing packages we forgot to ask for
+
 ## How it Works
 
 Well buster, i gotta say that's a little nosy, but if you must know,

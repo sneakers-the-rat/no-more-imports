@@ -1,10 +1,9 @@
-from typing import Literal, overload
 import ast
-import pdb
-from collections.abc import Container
 from collections import ChainMap
+from collections.abc import Container
 from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Iterator, Literal, overload
+
 
 @dataclass(eq=True)
 class Name:
@@ -15,9 +14,7 @@ class Name:
 
     def __contains__(self, item: str):
         return item in self.aliases or (
-            item == self.module
-            if self.name is None else
-            item in (self.name, self.id)
+            item == self.module if self.name is None else item in (self.name, self.id)
         )
 
     @property
@@ -25,7 +22,7 @@ class Name:
         if self.name is None:
             return self.module
         else:
-            return '.'.join([self.module, self.name])
+            return ".".join([self.module, self.name])
 
     @property
     def parts(self) -> list[str]:
@@ -41,24 +38,25 @@ class Name:
         - `module.submodule.subsubmodule.A`
 
         """
-        subparts = self.module.split('.')
+        subparts = self.module.split(".")
         if self.name:
             subparts.append(self.name)
-        return ['.'.join(subparts[:i+1]) for i in range(len(subparts))]
+        return [".".join(subparts[: i + 1]) for i in range(len(subparts))]
 
     def in_dict(self, other: Container):
         return any(part in other for part in self.parts)
 
     @classmethod
-    def from_ast_name(cls, name: ast.Name) -> 'Name':
+    def from_ast_name(cls, name: ast.Name) -> "Name":
         return cls.from_str(name.id)
 
     @classmethod
-    def from_str(cls, name: str) -> 'Name':
+    def from_str(cls, name: str) -> "Name":
         if len(name_parts := name.rsplit(".", maxsplit=1)) > 1:
             return Name(module=name_parts[0], name=name_parts[1])
         else:
             return Name(module=name)
+
 
 @dataclass(eq=True)
 class NameCollection:
@@ -81,6 +79,9 @@ class NameCollection:
 
         self.names.append(new_name)
 
+    def __iter__(self) -> Iterator[Name]:
+        yield from self.names
+
 
 class NameVisitor(ast.NodeVisitor):
     """
@@ -88,7 +89,7 @@ class NameVisitor(ast.NodeVisitor):
     """
 
     def __init__(self):
-        self.real_names = ChainMap({'self': None}, globals()['__builtins__'])
+        self.real_names = ChainMap({"self": None}, globals()["__builtins__"])
         self.fake_names = NameCollection()
 
     def pop_ctx(self):
@@ -109,8 +110,6 @@ class NameVisitor(ast.NodeVisitor):
         """Add to names"""
         return self.visit_Import(node)
 
-
-
     def visit_Name(self, node: ast.Name):
         """Either add to real names or fake names depending on ctx"""
         # print(ast.dump(node))
@@ -124,7 +123,7 @@ class NameVisitor(ast.NodeVisitor):
             del self.real_names[node.id]
         else:  # pragma: no cover
             if type(node.ctx) not in (ast.Del, ast.Store, ast.Load):
-                raise ValueError(f'How did this happen!? wrong node ctx type? {node.ctx}')
+                raise ValueError(f"How did this happen!? wrong node ctx type? {node.ctx}")
 
     def visit_Attribute(self, node: ast.Attribute):
         # print(ast.dump(node))
@@ -142,17 +141,17 @@ class NameVisitor(ast.NodeVisitor):
             del self.real_names[attr_name]
         else:  # pragma: no cover
             if type(node.ctx) not in (ast.Del, ast.Store, ast.Load):
-                raise ValueError(f'How did this happen!? wrong node ctx type? {node.ctx}')
+                raise ValueError(f"How did this happen!? wrong node ctx type? {node.ctx}")
 
     def visit_FunctionDef(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
         """push context"""
         # print(ast.dump(node))
 
         # names that should be defined in the parent scope
-        if hasattr(node, 'returns') and node.returns:
+        if hasattr(node, "returns") and node.returns:
             self._handle_annotation(node.returns)
 
-        if hasattr(node, 'name'):
+        if hasattr(node, "name"):
             self.real_names[node.name] = node
 
         # enter function scope
@@ -162,9 +161,9 @@ class NameVisitor(ast.NodeVisitor):
             self.real_names[arg.arg] = arg
             if arg.annotation:
                 self._handle_annotation(arg.annotation)
-        if hasattr(args, 'vararg') and args.vararg:
+        if hasattr(args, "vararg") and args.vararg:
             self.real_names[args.vararg.arg] = args.vararg
-        if hasattr(args, 'kwarg') and args.kwarg:
+        if hasattr(args, "kwarg") and args.kwarg:
             self.real_names[args.kwarg.arg] = args.kwarg
 
         self.generic_visit(node)
@@ -213,10 +212,10 @@ class NameVisitor(ast.NodeVisitor):
                 self.real_names[gen.target.id] = gen.target
         self.generic_visit(node)
         self.pop_ctx()
-            # if isinstance(gen.iter, ast.Name):
-            #     self.visit_Name(gen.iter)
-            # elif isinstance(gen.iter, ast.Call):
-            #     self.visit_Attribute(gen.iter.func)
+        # if isinstance(gen.iter, ast.Name):
+        #     self.visit_Name(gen.iter)
+        # elif isinstance(gen.iter, ast.Call):
+        #     self.visit_Attribute(gen.iter.func)
 
     def visit_DictComp(self, node: ast.DictComp):
         self.visit_ListComp(node)
@@ -250,56 +249,76 @@ class NameVisitor(ast.NodeVisitor):
         After visiting, we remove top-level module level definitions from
         fake names, since it's possible to refer to things out of order in scopes
         """
-        self.fake_names.names = [n for n in self.fake_names.names if n.module not in self.real_names]
+        self.fake_names.names = [
+            n for n in self.fake_names.names if n.module not in self.real_names
+        ]
 
-
-@overload
-def generate_frontmatter(node: ast.AST, mode: Literal['ast'] = 'ast') -> list[ast.Import | ast.Assign]: ...
-
-@overload
-def generate_frontmatter(node: ast.AST, mode: Literal['str'] = 'str') -> str: ...
-
-
-def generate_frontmatter(node: ast.AST, mode: Literal['ast', 'str'] = 'ast') -> list[ast.Import | ast.Assign] | str:
+def parse_names(node: ast.AST) -> NameCollection:
+    """
+    Get the names that need to be imported from an AST module by applying
+    :class:`.NameVisitor`
+    """
     visitor = NameVisitor()
     visitor.visit(node)
+    return visitor.fake_names
 
-    modules = list(dict.fromkeys([name.module for name in visitor.fake_names.names]))
 
-    if mode == 'ast':
-        return _frontmatter_ast(modules, visitor)
-    elif mode == 'str':
-        return _frontmatter_str(modules, visitor)
+
+@overload
+def generate_frontmatter(
+    names: NameCollection, mode: Literal["ast"] = "ast"
+) -> list[ast.Import | ast.Assign]: ...
+
+
+@overload
+def generate_frontmatter(names: NameCollection, mode: Literal["str"] = "str") -> str: ...
+
+
+def generate_frontmatter(
+    names: NameCollection, mode: Literal["ast", "str"] = "ast"
+) -> list[ast.Import | ast.Assign] | str:
+
+    if mode == "ast":
+        return _frontmatter_ast(names)
+    elif mode == "str":
+        return _frontmatter_str(names)
     else:
         raise ValueError("Unknown frontmatter mode")
 
 
-def _frontmatter_ast(modules: list[str], visitor: NameVisitor) -> list[ast.Import | ast.Assign]:
+def _frontmatter_ast(names: NameCollection) -> list[ast.Import | ast.Assign]:
+    modules = list(dict.fromkeys([name.module for name in names.names]))
+
     imports = [ast.Import(names=[ast.alias(name)]) for name in modules]
     assignments = []
-    for name in visitor.fake_names.names:
+    for name in names.names:
         for alias in name.aliases:
             assignments.append(
-                ast.Assign(targets=[ast.Name(id=alias, ctx=ast.Store())],
-                           value=ast.Name(id=name.id, ctx=ast.Load()))
+                ast.Assign(
+                    targets=[ast.Name(id=alias, ctx=ast.Store())],
+                    value=ast.Name(id=name.id, ctx=ast.Load()),
+                )
             )
 
     return imports + assignments
 
-def _frontmatter_str(modules: list[str], visitor: NameVisitor) -> str:
-    imports = [f'import {mod}' for mod in modules]
+
+def _frontmatter_str(names: NameCollection) -> str:
+    modules = list(dict.fromkeys([name.module for name in names.names]))
+    imports = [f"import {mod}" for mod in modules]
 
     assignments = []
-    for name in visitor.fake_names.names:
+    for name in names.names:
         for alias in name.aliases:
-            assignments.append(f'{alias} = {name.id}')
+            assignments.append(f"{alias} = {name.id}")
 
-    return '\n'.join(imports + assignments)
-
+    return "\n".join(imports + assignments)
 
 
 def flatten_attribute(attr: ast.Attribute) -> str:
     if isinstance(attr.value, ast.Attribute):
-        return '.'.join([flatten_attribute(attr.value), attr.attr])
+        return ".".join([flatten_attribute(attr.value), attr.attr])
     elif isinstance(attr.value, ast.Name):
-        return '.'.join([attr.value.id, attr.attr])
+        return ".".join([attr.value.id, attr.attr])
+    elif isinstance(attr.value, ast.Call):
+        return attr.value.func.id

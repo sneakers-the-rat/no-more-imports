@@ -1,6 +1,7 @@
-import lazy_import
 from pathlib import Path
 
-__all__ = ['lazy_import']
+import no_more_imports
 
-DATA_DIR = Path(__file__).resolve().parent / 'data'
+__all__ = ["no_more_imports"]
+
+DATA_DIR = Path(__file__).resolve().parent / "data"

@@ -35,6 +35,21 @@ def eff_it(x=1):
 data = default_rng().random((10,10))
 ```
 
+## Reviews
+
+<blockquote>
+<span style="font-style: italic;">
+
+one of the more fucked up things i've literally ever seen
+
+</span>
+<span style="text-align: right; font-style: italic;">
+
+[- "danny mcClanahan"](https://circumstances.run/@hipsterelectron/113321459589917839), 2024 
+
+</span>
+</blockquote>
+
 ## Installation
 
 ```shell

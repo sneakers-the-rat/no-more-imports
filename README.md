@@ -45,7 +45,7 @@ one of the more fucked up things i've literally ever seen
 </span>
 <span style="text-align: right; font-style: italic;">
 
-[- "danny mcClanahan"](https://circumstances.run/@hipsterelectron/113321459589917839), 2024 
+[- "d@nny "disc@" mc2"](https://circumstances.run/@hipsterelectron/113321459589917839), 2024 
 
 </span>
 </blockquote>

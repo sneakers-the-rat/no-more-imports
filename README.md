@@ -1,3 +1,5 @@
+![PyPI - Version](https://img.shields.io/pypi/v/no-more-imports)
+
 # no-more-imports
 
 python with no imports
